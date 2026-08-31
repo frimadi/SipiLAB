@@ -1124,10 +1124,16 @@ class UnifiedExportService {
                     textAlign: pw.TextAlign.center,
                   ),
                   pw.SizedBox(height: 12),
-                  pw.Text('Kuat Tekan (28 hari)',
+                  pw.Text(
+                    result.isPrediksi28Hari 
+                        ? 'Prediksi Kuat Tekan (28 hari)' 
+                        : 'Kuat Tekan (28 hari)',
                       style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
                   pw.SizedBox(height: 6),
-                  pw.Text('${result.kuatTekan.toStringAsFixed(2)} MPa',
+                  pw.Text(
+                      result.standarAcuan == 'SNI'
+                          ? '${(result.kuatTekanKubus ?? result.kuatTekan).toStringAsFixed(2)} kg/cm²'
+                          : '${result.kuatTekan.toStringAsFixed(2)} MPa',
                       style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
                 ],
               ),
