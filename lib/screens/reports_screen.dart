@@ -1254,27 +1254,38 @@ class _ReportsScreenState extends State<ReportsScreen>
                 : '${result.bebanMaksimal.toStringAsFixed(2)} kN',
             Icons.fitness_center,
           ),
-          if (result.standarAcuan == 'SNI' && result.kuatTekanKubus != null)
-            _buildDetailRow('Kuat Tekan (Umur Uji)', 
-                '${result.kuatTekanKubus!.toStringAsFixed(2)} kg/cm²', 
-                Icons.speed),
-          if (result.standarAcuan != 'SNI' && result.kuatTekanSilinder != null)
-            _buildDetailRow('Kuat Tekan (Umur Uji)', 
-                '${result.kuatTekanSilinder!.toStringAsFixed(2)} MPa', 
-                Icons.speed),
+          if (result.standarAcuan == 'SNI' && result.kuatTekanUmurUjiKgCm2 != null)
+            _buildDetailRow('Kuat Tekan Umur Uji (${result.umurBeton} hari)', 
+                '${result.kuatTekanUmurUjiKgCm2!.toStringAsFixed(2)} kg/cm² (hasil aktual)', 
+                Icons.science),
+          if (result.standarAcuan != 'SNI' && result.kuatTekanUmurUjiMPa != null)
+            _buildDetailRow('Kuat Tekan Umur Uji (${result.umurBeton} hari)', 
+                '${result.kuatTekanUmurUjiMPa!.toStringAsFixed(2)} MPa (hasil aktual)', 
+                Icons.science),
           if (result.standarAcuan != 'SNI' && result.kuatTekanEkivalenKgCm2 != null)
             _buildDetailRow('Setara Kubus (info)', 
                 '${result.kuatTekanEkivalenKgCm2!.toStringAsFixed(2)} kg/cm²', 
                 Icons.compare_arrows),
-          if (result.umurBeton < 28)
+          if (result.umurBeton != 28)
             _buildDetailRow('Faktor Konversi ke 28 Hari', 
                 'Menggunakan Tabel PBI', 
                 Icons.functions),
-          _buildDetailRow('Kuat Tekan Estimasi (28 Hari)', 
-              '${result.kuatTekan.toStringAsFixed(2)} MPa', 
+          _buildDetailRow(
+              result.umurBeton != 28 
+                  ? 'Prediksi Kuat Tekan (28 Hari)' 
+                  : 'Kuat Tekan (28 Hari)', 
+              result.standarAcuan == 'SNI'
+                  ? '${(result.kuatTekanKubus ?? result.kuatTekan).toStringAsFixed(2)} kg/cm²'
+                  : '${result.kuatTekan.toStringAsFixed(2)} MPa', 
               Icons.analytics,
               valueColor: Colors.blue[900],
               valueBold: true),
+          if (result.standarAcuan == 'SNI')
+            _buildDetailRow('(setara)', '${result.kuatTekan.toStringAsFixed(2)} MPa', Icons.compare_arrows)
+          else if (result.kuatTekanEkivalenKgCm2 != null)
+            _buildDetailRow('(setara kubus, info)', 
+                '${result.kuatTekanEkivalenKgCm2!.toStringAsFixed(2)} kg/cm²', 
+                Icons.compare_arrows),
         ]),
         
         const SizedBox(height: 16),
@@ -1871,4 +1882,3 @@ class _ReportsScreenState extends State<ReportsScreen>
     );
   }
 }
-
