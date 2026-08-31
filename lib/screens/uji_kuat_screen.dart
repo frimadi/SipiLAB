@@ -2020,70 +2020,128 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
           const SizedBox(height: 16),
 
           
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('KUAT TEKAN',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF334155),
-                        )),
-                    SizedBox(height: 4),
-                    Text('Compressive Strength',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                        )),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
+          Builder(builder: (context) {
+            final bool isKubusSNI = _standarAcuan == 'SNI' && _result!.sisiKubus != null;
+            final bool isPrediksi = _result!.isPrediksi28Hari;
+
+            final double mainValue = isKubusSNI
+                ? (_result!.kuatTekanKubus ?? _result!.kuatTekan)
+                : _result!.kuatTekan;
+            final String mainUnit = isKubusSNI ? 'kg/cm²' : 'MPa';
+
+            final double? secondaryValue = isKubusSNI
+                ? _result!.kuatTekan 
+                : _result!.kuatTekanEkivalenKgCm2; 
+            final String secondaryUnit = isKubusSNI ? 'MPa' : 'kg/cm²';
+            final String secondaryLabel = isKubusSNI
+                ? '≈ ${secondaryValue?.toStringAsFixed(2)} $secondaryUnit'
+                : '≈ ${secondaryValue?.toStringAsFixed(2)} $secondaryUnit (setara kubus, info)';
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        _result!.kuatTekan.toStringAsFixed(2),
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'monospace',
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isPrediksi
+                                ? 'PREDIKSI KUAT TEKAN\n(Umur 28 Hari)'
+                                : 'KUAT TEKAN\n(Umur 28 Hari)',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF334155),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text('Compressive Strength',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF64748B),
+                              )),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'MPa',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              mainValue.toStringAsFixed(2),
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              mainUnit,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
+                  if (secondaryValue != null) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        secondaryLabel,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+
+          if (_result!.isPrediksi28Hari) ...[
+            const SizedBox(height: 8),
+            Builder(builder: (context) {
+              final bool isKubusSNI = _standarAcuan == 'SNI' && _result!.sisiKubus != null;
+              final double? umurUjiValue = isKubusSNI
+                  ? _result!.kuatTekanUmurUjiKgCm2
+                  : _result!.kuatTekanUmurUjiMPa;
+              final String umurUjiUnit = isKubusSNI ? 'kg/cm²' : 'MPa';
+              if (umurUjiValue == null) return const SizedBox.shrink();
+              return _buildResultRow(
+                'Kuat Tekan Umur Uji (${_result!.umurBeton} hari)',
+                '${umurUjiValue.toStringAsFixed(2)} $umurUjiUnit (hasil aktual, belum dikonversi)',
+                Icons.science_rounded,
+              );
+            }),
+          ],
 
           const SizedBox(height: 14),
 
@@ -2321,4 +2379,4 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
     );
   }
 
-} 
+}
