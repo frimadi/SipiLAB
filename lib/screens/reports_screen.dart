@@ -1161,10 +1161,16 @@ class _ReportsScreenState extends State<ReportsScreen>
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              Text('Kuat Tekan (28 hari)',
+              Text(
+                result.isPrediksi28Hari 
+                    ? 'Prediksi Kuat Tekan (28 hari)' 
+                    : 'Kuat Tekan (28 hari)',
                   style: const TextStyle(fontSize: 14, color: Colors.black54)),
               const SizedBox(height: 8),
-              Text('${result.kuatTekan.toStringAsFixed(2)} MPa',
+              Text(
+                  result.standarAcuan == 'SNI'
+                      ? '${(result.kuatTekanKubus ?? result.kuatTekan).toStringAsFixed(2)} kg/cm²'
+                      : '${result.kuatTekan.toStringAsFixed(2)} MPa',
                   style: TextStyle(
                       fontSize: 36, 
                       fontWeight: FontWeight.bold,
