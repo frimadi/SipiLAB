@@ -379,6 +379,7 @@ class UjiKuatService {
         lebarKubus: lebar,
         tinggiKubus: tinggi,
         satuanBebanInput: data.satuanBeban,
+        kuatTekanUmurUjiKgCm2: kuatTekanUmurUjiKgCm2,
       );
       
     } else if (data.diameter != null) {
@@ -427,6 +428,7 @@ class UjiKuatService {
         kuatTekanSilinder: kuatTekan28,
         
         kuatTekanEkivalenKgCm2: konversiMPaKeKgCm2EkuivalenKubus(kuatTekan28),
+        kuatTekanUmurUjiMPa: kuatTekanUmurUjiMPa,
       );
     } else {
       throw Exception('Data tidak valid: Dimensi benda uji tidak lengkap.');
