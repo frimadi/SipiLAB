@@ -1221,12 +1221,12 @@ class UnifiedExportService {
                     : '${result.bebanMaksimal.toStringAsFixed(2)} kN',
                 bold: true,
               ),
-              if (result.standarAcuan == 'SNI' && result.kuatTekanKubus != null)
-                _pdfDetailRow('Kuat Tekan (Umur Uji)', 
-                    '${result.kuatTekanKubus!.toStringAsFixed(2)} kg/cm²'),
-              if (result.standarAcuan != 'SNI' && result.kuatTekanSilinder != null)
-                _pdfDetailRow('Kuat Tekan (Umur Uji)', 
-                    '${result.kuatTekanSilinder!.toStringAsFixed(2)} MPa'),
+              if (result.standarAcuan == 'SNI' && result.kuatTekanUmurUjiKgCm2 != null)
+                _pdfDetailRow('Kuat Tekan Umur Uji (${result.umurBeton} hari)', 
+                    '${result.kuatTekanUmurUjiKgCm2!.toStringAsFixed(2)} kg/cm² (hasil aktual)'),
+              if (result.standarAcuan != 'SNI' && result.kuatTekanUmurUjiMPa != null)
+                _pdfDetailRow('Kuat Tekan Umur Uji (${result.umurBeton} hari)', 
+                    '${result.kuatTekanUmurUjiMPa!.toStringAsFixed(2)} MPa (hasil aktual)'),
               if (result.standarAcuan != 'SNI' && result.kuatTekanEkivalenKgCm2 != null)
                 _pdfDetailRow('Setara Kubus (info)', 
                     '${result.kuatTekanEkivalenKgCm2!.toStringAsFixed(2)} kg/cm²'),
@@ -1234,12 +1234,25 @@ class UnifiedExportService {
             
             pw.SizedBox(height: 12),
             
-            _pdfInfoBox('Konversi ke 28 Hari', [
-              if (result.umurBeton < 28)
-                _pdfDetailRow('Faktor Konversi', 'Menggunakan Tabel PBI'),
-              _pdfDetailRow('Kuat Tekan Estimasi (28 Hari)', 
-                  '${result.kuatTekan.toStringAsFixed(2)} MPa', bold: true),
-            ], borderColor: PdfColors.blue300),
+            _pdfInfoBox(
+              result.umurBeton != 28 ? 'Prediksi Kuat Tekan (Umur 28 Hari)' : 'Kuat Tekan (Umur 28 Hari)', 
+              [
+                if (result.umurBeton != 28)
+                  _pdfDetailRow('Faktor Konversi', 'Menggunakan Tabel PBI'),
+                _pdfDetailRow(
+                  result.umurBeton != 28 ? 'Kuat Tekan Estimasi (28 Hari)' : 'Kuat Tekan (28 Hari)', 
+                  result.standarAcuan == 'SNI'
+                      ? '${(result.kuatTekanKubus ?? result.kuatTekan).toStringAsFixed(2)} kg/cm²'
+                      : '${result.kuatTekan.toStringAsFixed(2)} MPa', 
+                  bold: true,
+                ),
+                if (result.standarAcuan == 'SNI')
+                  _pdfDetailRow('(setara)', '${result.kuatTekan.toStringAsFixed(2)} MPa')
+                else if (result.kuatTekanEkivalenKgCm2 != null)
+                  _pdfDetailRow('(setara kubus, info)', '${result.kuatTekanEkivalenKgCm2!.toStringAsFixed(2)} kg/cm²'),
+              ], 
+              borderColor: PdfColors.blue300,
+            ),
             
             pw.SizedBox(height: 16),
             
@@ -1544,5 +1557,4 @@ class UnifiedExportService {
     );
   }
 
-} 
-
+}
