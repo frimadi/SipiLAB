@@ -1,0 +1,54 @@
+name: Build APK
+
+# Kapan workflow ini jalan otomatis:
+# - Setiap kali ada push (perubahan kode) ke branch manapun
+# - Bisa juga dijalankan manual lewat tab "Actions" di GitHub (tombol "Run workflow")
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build APK (release)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Setup Java (JDK 17 - dibutuhkan Android Gradle Plugin 8.1.0)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cek versi Flutter & Dart
+        run: flutter --version
+
+      - name: Ambil dependencies (flutter pub get)
+        run: flutter pub get
+
+      - name: Analisa kode (deteksi error sebelum build)
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        continue-on-error: true
+        # continue-on-error: true supaya build tetap lanjut walau ada
+        # warning/info kecil. Kalau nanti mau lebih ketat (build gagal
+        # kalau ada warning), hapus baris continue-on-error ini.
+
+      - name: Build APK (release)
+        run: flutter build apk --release
+
+      - name: Upload APK sebagai artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SipiLab-apk-${{ github.ref_name }}-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90
