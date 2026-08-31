@@ -26,10 +26,12 @@ class UjiKuatResult {
   final double? lebarKubus; 
   final double? tinggiKubus; 
   final String? satuanBebanInput; 
+  final double? kuatTekanUmurUjiKgCm2; 
   
   final double? diameter; 
   final double? kuatTekanSilinder; 
   final double? kuatTekanEkivalenKgCm2; 
+  final double? kuatTekanUmurUjiMPa; 
 
   UjiKuatResult({
     required this.bebanMaksimal,
@@ -51,10 +53,15 @@ class UjiKuatResult {
     this.lebarKubus,
     this.tinggiKubus,
     this.satuanBebanInput,
+    this.kuatTekanUmurUjiKgCm2,
     this.diameter,
     this.kuatTekanSilinder,
     this.kuatTekanEkivalenKgCm2,
+    this.kuatTekanUmurUjiMPa,
   });
+
+  
+  bool get isPrediksi28Hari => umurBeton != 28;
 
   Map<String, dynamic> toMap() {
     return {
@@ -77,9 +84,11 @@ class UjiKuatResult {
       'lebarKubus': lebarKubus,
       'tinggiKubus': tinggiKubus,
       'satuanBebanInput': satuanBebanInput,
+      'kuatTekanUmurUjiKgCm2': kuatTekanUmurUjiKgCm2,
       'diameter': diameter,
       'kuatTekanSilinder': kuatTekanSilinder,
       'kuatTekanEkivalenKgCm2': kuatTekanEkivalenKgCm2,
+      'kuatTekanUmurUjiMPa': kuatTekanUmurUjiMPa,
     };
   }
 
@@ -106,9 +115,11 @@ class UjiKuatResult {
       lebarKubus: map['lebarKubus']?.toDouble(),
       tinggiKubus: map['tinggiKubus']?.toDouble(),
       satuanBebanInput: map['satuanBebanInput'],
+      kuatTekanUmurUjiKgCm2: map['kuatTekanUmurUjiKgCm2']?.toDouble(),
       diameter: map['diameter']?.toDouble(),
       kuatTekanSilinder: map['kuatTekanSilinder']?.toDouble(),
       kuatTekanEkivalenKgCm2: map['kuatTekanEkivalenKgCm2']?.toDouble(),
+      kuatTekanUmurUjiMPa: map['kuatTekanUmurUjiMPa']?.toDouble(),
     );
   }
 
@@ -135,9 +146,11 @@ class UjiKuatResult {
     double? lebarKubus,
     double? tinggiKubus,
     String? satuanBebanInput,
+    double? kuatTekanUmurUjiKgCm2,
     double? diameter,
     double? kuatTekanSilinder,
     double? kuatTekanEkivalenKgCm2,
+    double? kuatTekanUmurUjiMPa,
   }) {
     return UjiKuatResult(
       bebanMaksimal: bebanMaksimal ?? this.bebanMaksimal,
@@ -159,9 +172,11 @@ class UjiKuatResult {
       lebarKubus: lebarKubus ?? this.lebarKubus,
       tinggiKubus: tinggiKubus ?? this.tinggiKubus,
       satuanBebanInput: satuanBebanInput ?? this.satuanBebanInput,
+      kuatTekanUmurUjiKgCm2: kuatTekanUmurUjiKgCm2 ?? this.kuatTekanUmurUjiKgCm2,
       diameter: diameter ?? this.diameter,
       kuatTekanSilinder: kuatTekanSilinder ?? this.kuatTekanSilinder,
       kuatTekanEkivalenKgCm2: kuatTekanEkivalenKgCm2 ?? this.kuatTekanEkivalenKgCm2,
+      kuatTekanUmurUjiMPa: kuatTekanUmurUjiMPa ?? this.kuatTekanUmurUjiMPa,
     );
   }
 }
