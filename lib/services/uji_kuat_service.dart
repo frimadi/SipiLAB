@@ -373,7 +373,7 @@ class UjiKuatService {
         pekerjaan: data.pekerjaan,
         lokasi: data.lokasi,
         photoPaths: data.photoPaths,
-        sisiKubus: data.sisiKubus,
+        sisiKubus: data.sisiKubus ?? panjang,
         kuatTekanKubus: kuatTekan28KgCm2, 
         panjangKubus: panjang,
         lebarKubus: lebar,
