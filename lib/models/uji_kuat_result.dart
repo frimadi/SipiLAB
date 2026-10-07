@@ -212,7 +212,7 @@ class UjiKuatData {
     this.tinggiKubus,
     this.diameter,
     required this.beban,
-    this.satuanBeban = 'kN',
+    this.satuanBeban = 'Ton',
     required this.tanggalPembuatan,
     required this.tanggalPengujian,
     required this.mutuBeton,

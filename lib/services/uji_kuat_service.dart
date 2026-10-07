@@ -18,6 +18,8 @@ class UjiKuatService {
   static const double FAKTOR_KUBUS_KE_SILINDER = 0.83;
   static const double FAKTOR_KGCM2_TO_MPA = 0.0980665; 
   static const double FAKTOR_KN_TO_KGF = 101.97; 
+  // 1 Ton (ton metrik, gaya) = 1000 kgf — sesuai Excel laboratorium (Ton x 1000 = kg)
+  static const double FAKTOR_TON_TO_KGF = 1000.0;
   
   
   Map<String, dynamic> validateDimensiKubus(double sisiKubus) {
@@ -86,6 +88,24 @@ class UjiKuatService {
   
   double konversiKNKeKgf(double bebanKN) {
     return bebanKN * FAKTOR_KN_TO_KGF;
+  }
+
+  double konversiTonKeKgf(double bebanTon) {
+    return bebanTon * FAKTOR_TON_TO_KGF;
+  }
+
+  /// Ubah beban input ke kgf berdasarkan satuan.
+  /// 'Ton' -> x1000, 'kN' -> x101,97. Satuan lain (data riwayat lama,
+  /// mis. 'kg/cm²') dianggap sudah dalam kgf seperti perilaku sebelumnya.
+  double konversiBebanKeKgf(double beban, String satuan) {
+    switch (satuan) {
+      case 'Ton':
+        return konversiTonKeKgf(beban);
+      case 'kN':
+        return konversiKNKeKgf(beban);
+      default:
+        return beban;
+    }
   }
 
   
@@ -322,9 +342,7 @@ class UjiKuatService {
       luasPermukaan = hitungLuasPermukaanKubus(panjang, lebar);
       
       
-      double bebanKg = data.satuanBeban == 'kN'
-          ? konversiKNKeKgf(data.beban)
-          : data.beban;
+      double bebanKg = konversiBebanKeKgf(data.beban, data.satuanBeban);
       
      
       double kuatTekanUmurUjiKgCm2 = hitungKuatTekanKubus(bebanKg, luasPermukaan);

@@ -33,7 +33,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
   final TextEditingController _tinggiKubusController = TextEditingController(text: '150');
   
   
-  String _satuanBebanKubus = 'kN'; 
+  String _satuanBebanKubus = 'Ton'; 
   bool _isDimensiKubusCustom = false; 
   
   
@@ -279,8 +279,13 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
         });
 
         if (mounted) {
+          final double? fcUji = result.kuatTekanUmurUjiKgCm2;
+          final bool fcMencurigakan = _standarAcuan == 'SNI' &&
+              fcUji != null &&
+              (fcUji < 30 || fcUji > 1000);
           _showSuccessSnackBar(
             'Hasil berhasil disimpan!${_photoPaths.isNotEmpty ? ' (${_photoPaths.length} foto)' : ''}\nLihat di menu Laporan untuk export.'
+            '${fcMencurigakan ? '\n⚠️ Kuat tekan tidak wajar — periksa satuan beban (Ton/kN) dan dimensi.' : ''}'
           );
         }
       } catch (e) {
@@ -301,7 +306,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
       _lebarKubusController.text = '150';
       _tinggiKubusController.text = '150';
       _isDimensiKubusCustom = false;
-      _satuanBebanKubus = 'kN';
+      _satuanBebanKubus = 'Ton';
       _diameterController.clear();
       _tinggiController.clear();
       _bebanController.clear();
@@ -1539,11 +1544,11 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
         
         _buildToggleRow(
           label: 'Satuan Beban Maksimum',
-          options: const ['kN', 'kg/cm²'],
-          selectedIndex: _satuanBebanKubus == 'kN' ? 0 : 1,
+          options: const ['Ton', 'kN'],
+          selectedIndex: _satuanBebanKubus == 'Ton' ? 0 : 1,
           onSelected: (i) {
             setState(() {
-              _satuanBebanKubus = (i == 0) ? 'kN' : 'kg/cm²';
+              _satuanBebanKubus = (i == 0) ? 'Ton' : 'kN';
             });
           },
         ),
@@ -1555,10 +1560,25 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
           symbol: 'P',
           unit: _satuanBebanKubus,
           icon: Icons.fitness_center_rounded,
-          hint: _satuanBebanKubus == 'kN'
-              ? 'Bacaan langsung dari mesin uji (kN)'
-              : 'Bacaan langsung dari mesin uji (kg/cm²)',
+          hint: 'Bacaan langsung dari mesin uji ($_satuanBebanKubus)',
+          onChanged: (_) => setState(() {}),
         ),
+        Builder(builder: (context) {
+          final double? b = double.tryParse(_bebanController.text);
+          if (b == null || b <= 0) return const SizedBox.shrink();
+          final double kgf = _service.konversiBebanKeKgf(b, _satuanBebanKubus);
+          return Padding(
+            padding: const EdgeInsets.only(top: 6, left: 4),
+            child: Text(
+              '= ${kgf.toStringAsFixed(1)} kgf',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+              ),
+            ),
+          );
+        }),
         const SizedBox(height: 14),
         
         
@@ -1593,20 +1613,21 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                _satuanBebanKubus == 'kN'
-                    ? '📐 Bentuk: Kubus (bidang tekan Panjang × Lebar)\n'
+                _satuanBebanKubus == 'Ton'
+                    ? '📐 Bentuk: Kubus/balok (bidang tekan Panjang × Lebar)\n'
                       '📏 Luas: Panjang × Lebar (mm → cm²)\n'
-                      '⚖️ Beban: kN (bacaan alat baru)\n'
+                      '⚖️ Beban: Ton (bacaan alat)\n'
+                      '🧮 Formula: Beban (kg) = Beban (Ton) × 1000\n'
+                      '   fc (kg/cm²) = Beban (kg) / Luas (cm²)\n'
+                      '📊 Contoh: 38 Ton × 1000 = 38.000 kg\n'
+                      '   Luas 98 cm² → fc = 387,8 kg/cm²'
+                    : '📐 Bentuk: Kubus/balok (bidang tekan Panjang × Lebar)\n'
+                      '📏 Luas: Panjang × Lebar (mm → cm²)\n'
+                      '⚖️ Beban: kN (bacaan alat)\n'
                       '🧮 Formula: Beban (kg) = Beban (kN) × 101,97\n'
                       '   fc (kg/cm²) = Beban (kg) / Luas (cm²)\n'
                       '📊 Contoh: 348 kN × 101,97 = 35.485,6 kg\n'
-                      '   Luas 225 cm² → fc = 157,7 kg/cm²'
-                    : '📐 Bentuk: Kubus (bidang tekan Panjang × Lebar)\n'
-                      '📏 Luas: Panjang × Lebar (mm → cm²)\n'
-                      '⚖️ Beban: kg/cm² (bacaan alat lama)\n'
-                      '🧮 Formula: fc = P / Luas\n'
-                      '📊 Contoh: P = 50.625 kg/cm², Luas = 225 cm²\n'
-                      '   → fc = 50.625 / 225 = 225 kg/cm²',
+                      '   Luas 225 cm² → fc = 157,7 kg/cm²',
                 style: const TextStyle(
                   fontSize: 11,
                   color: Color(0xFF1E40AF),
