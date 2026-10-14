@@ -39,6 +39,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
   
   final TextEditingController _diameterController = TextEditingController();
   final TextEditingController _tinggiController = TextEditingController();
+  bool _tinggiManual = false; // true bila tinggi diisi/diubah manual oleh pengguna
   
   
   final TextEditingController _bebanController = TextEditingController();
@@ -157,13 +158,19 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
     } else if (_standarAcuan != 'SNI' && _diameterController.text.isNotEmpty) {
       double? diameter = double.tryParse(_diameterController.text);
       if (diameter != null && diameter > 0) {
-        double tinggiOtomatis = diameter * 2;
-        _tinggiController.text = tinggiOtomatis.toStringAsFixed(1);
-
-        var dimensiValidation =
-            _service.validateDimensiSilinder(diameter, tinggiOtomatis);
-        if (!dimensiValidation['valid']) {
-          errors.addAll(List<String>.from(dimensiValidation['errors']));
+        // Tinggi kosong -> default 2 × diameter
+        if (_tinggiController.text.trim().isEmpty) {
+          _tinggiController.text = (diameter * 2).toStringAsFixed(1);
+        }
+        double? tinggi = double.tryParse(_tinggiController.text);
+        if (tinggi == null || tinggi <= 0) {
+          errors.add('Tinggi silinder tidak valid');
+        } else {
+          var dimensiValidation =
+              _service.validateDimensiSilinder(diameter, tinggi);
+          if (!dimensiValidation['valid']) {
+            errors.addAll(List<String>.from(dimensiValidation['errors']));
+          }
         }
       }
     }
@@ -238,6 +245,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
 
       data = UjiKuatData(
         diameter: diameter,
+        tinggiSilinder: double.tryParse(_tinggiController.text),
         beban: beban,
         tanggalPembuatan: _tanggalPembuatan,
         tanggalPengujian: _tanggalPengujian,
@@ -283,9 +291,13 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
           final bool fcMencurigakan = _standarAcuan == 'SNI' &&
               fcUji != null &&
               (fcUji < 30 || fcUji > 1000);
+          final double? rasioHD = result.rasioHD;
+          final bool rasioTidakStandar =
+              rasioHD != null && _service.peringatanRasioHD(rasioHD) != null;
           _showSuccessSnackBar(
             'Hasil berhasil disimpan!${_photoPaths.isNotEmpty ? ' (${_photoPaths.length} foto)' : ''}\nLihat di menu Laporan untuk export.'
             '${fcMencurigakan ? '\n⚠️ Kuat tekan tidak wajar — periksa satuan beban (Ton/kN) dan dimensi.' : ''}'
+            '${rasioTidakStandar ? '\n⚠️ Rasio H/D tidak standar — hasil belum dikoreksi.' : ''}'
           );
         }
       } catch (e) {
@@ -308,7 +320,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
       _isDimensiKubusCustom = false;
       _satuanBebanKubus = 'Ton';
       _diameterController.clear();
-      _tinggiController.clear();
+      _tinggiController.clear(); _tinggiManual = false;
       _bebanController.clear();
       _beratBendaUjiController.clear();
       _pekerjaanController.clear();
@@ -1123,7 +1135,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
               Expanded(
                 child: _buildStandardRadioButton(
                   'BINA MARGA',
-                  'Bina Marga 2018\n(Silinder Ø × 2H)',
+                  'Bina Marga 2018\n(Silinder)',
                   'BINA MARGA',
                   Icons.straighten_rounded,
                 ),
@@ -1319,7 +1331,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
           } else {
             _mutuBeton = 'fc\' ';
             _diameterController.clear();
-            _tinggiController.clear();
+            _tinggiController.clear(); _tinggiManual = false;
           }
         });
       },
@@ -1451,7 +1463,7 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
                     Text(
                       _standarAcuan == 'SNI' 
                           ? 'Benda Uji Kubus 15×15×15 cm'
-                          : 'Benda Uji Silinder (H:D = 2:1)',
+                          : 'Benda Uji Silinder',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF64748B),
@@ -1708,29 +1720,58 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
           symbol: 'D',
           unit: 'mm',
           icon: Icons.straighten_rounded,
-          hint: 'Standar: 100 atau 150 mm',
+          hint: 'Isi sesuai diameter benda uji',
           onChanged: (value) {
-            if (value.isNotEmpty) {
+            setState(() {
               double? diameter = double.tryParse(value);
-              if (diameter != null && diameter > 0) {
+              // Tinggi otomatis 2 × D selama belum diubah manual
+              if (!_tinggiManual && diameter != null && diameter > 0) {
                 _tinggiController.text = (diameter * 2).toStringAsFixed(1);
               }
-            }
+            });
           },
         ),
         const SizedBox(height: 12),
-        
+
         _buildInputField(
           controller: _tinggiController,
-          label: 'Tinggi Silinder (Otomatis)',
+          label: 'Tinggi Silinder',
           symbol: 'H',
           unit: 'mm',
           icon: Icons.height_rounded,
-          hint: 'Auto: 2 × Diameter',
-          enabled: false,
+          hint: 'Otomatis 2 × Diameter, bisa diubah',
+          onChanged: (value) {
+            setState(() {
+              _tinggiManual = value.trim().isNotEmpty;
+            });
+          },
         ),
+        Builder(builder: (context) {
+          final double? d = double.tryParse(_diameterController.text);
+          final double? h = double.tryParse(_tinggiController.text);
+          if (d == null || h == null || d <= 0 || h <= 0) {
+            return const SizedBox.shrink();
+          }
+          final double rasio = h / d;
+          final String? peringatan = _service.peringatanRasioHD(rasio);
+          return Padding(
+            padding: const EdgeInsets.only(top: 6, left: 4),
+            child: Text(
+              peringatan == null
+                  ? 'Rasio H/D = ${rasio.toStringAsFixed(2)} (standar)'
+                  : '⚠️ $peringatan',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: peringatan == null
+                    ? const Color(0xFF15803D)
+                    : const Color(0xFFB45309),
+              ),
+            ),
+          );
+        }),
         const SizedBox(height: 12),
-        
+
         _buildInputField(
           controller: _beratBendaUjiController,
           label: 'Berat Benda Uji (Opsional)',
@@ -1783,8 +1824,9 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
               ),
               const SizedBox(height: 8),
               const Text(
-                '📐 Bentuk: Silinder dengan rasio H:D = 2:1\n'
-                '📏 Diameter: 100 mm (Ø10 cm) atau 150 mm (Ø15 cm)\n'
+                '📐 Bentuk: Silinder (standar rasio H:D = 2:1)\n'
+                '📏 Diameter & tinggi: sesuai ukuran benda uji\n'
+                '⚠️ H/D tidak standar: hasil tidak dikoreksi\n'
                 '📏 Luas: 0.25 × π × D² dalam mm²\n'
                 '⚖️ Gaya: Dalam kN (kilonewton)\n'
                 '🧮 Formula: fc = (F × 1000) / Luas mm²\n'
@@ -2177,12 +2219,19 @@ class _UjiKuatScreenState extends State<UjiKuatScreen>
               '${(_result!.tinggiKubus ?? _result!.sisiKubus!).toStringAsFixed(0)} mm',
               Icons.view_in_ar_rounded,
             )
-          else if (_result!.diameter != null)
+          else if (_result!.diameter != null) ...[
             _buildResultRow(
               'Bentuk Benda Uji',
-              'Silinder Ø${_result!.diameter!.toStringAsFixed(0)} mm × H${(_result!.diameter! * 2).toStringAsFixed(0)} mm',
+              'Silinder Ø${_result!.diameter!.toStringAsFixed(0)} mm × H${_result!.tinggiSilinderEfektif!.toStringAsFixed(0)} mm',
               Icons.straighten_rounded,
             ),
+            _buildResultRow(
+              'Rasio H/D',
+              '${_result!.rasioHD!.toStringAsFixed(2)}'
+              '${_service.peringatanRasioHD(_result!.rasioHD!) != null ? ' ⚠️ tidak standar, belum dikoreksi' : ' (standar)'}',
+              Icons.compare_arrows_rounded,
+            ),
+          ],
 
           if (_result!.beratBendaUji != null)
             _buildResultRow(

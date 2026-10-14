@@ -15,6 +15,9 @@ class UjiKuatService {
   static const double SISI_KUBUS_STANDAR = 150.0; 
   static const List<double> DIAMETER_SILINDER_STANDAR = [100.0, 150.0]; 
   static const double RASIO_TINGGI_DIAMETER = 2.0;
+  // Batas awal peringatan rasio H/D (silakan sesuaikan dengan kebijakan Lab)
+  static const double RASIO_HD_MIN_PERINGATAN = 1.8;
+  static const double RASIO_HD_MAX_PERINGATAN = 2.2;
   static const double FAKTOR_KUBUS_KE_SILINDER = 0.83;
   static const double FAKTOR_KGCM2_TO_MPA = 0.0980665; 
   static const double FAKTOR_KN_TO_KGF = 101.97; 
@@ -33,25 +36,45 @@ class UjiKuatService {
     };
   }
   
+  /// Diameter dan tinggi silinder bebas (harus > 0).
+  /// Rasio H/D di luar rentang standar hanya diberi peringatan, tidak diblokir.
   Map<String, dynamic> validateDimensiSilinder(double diameter, double tinggi) {
     List<String> errors = [];
-    
-    if (!DIAMETER_SILINDER_STANDAR.contains(diameter)) {
-      errors.add('Diameter harus ${DIAMETER_SILINDER_STANDAR.join(" atau ")} mm');
+    List<String> warnings = [];
+
+    if (diameter <= 0) {
+      errors.add('Diameter silinder harus > 0');
     }
-    
-    double tinggiSeharusnya = diameter * RASIO_TINGGI_DIAMETER;
-    if ((tinggi - tinggiSeharusnya).abs() > 5.0) {
-      errors.add('Tinggi harus ${tinggiSeharusnya.toStringAsFixed(0)} mm (rasio 2:1)');
+    if (tinggi <= 0) {
+      errors.add('Tinggi silinder harus > 0');
     }
-    
+
+    double? rasio;
+    if (diameter > 0 && tinggi > 0) {
+      rasio = tinggi / diameter;
+      final String? peringatan = peringatanRasioHD(rasio);
+      if (peringatan != null) warnings.add(peringatan);
+    }
+
     return {
       'valid': errors.isEmpty,
       'errors': errors,
-      'tinggiSeharusnya': tinggiSeharusnya,
+      'warnings': warnings,
+      'rasio': rasio,
+      'tinggiSeharusnya': diameter * RASIO_TINGGI_DIAMETER,
     };
   }
-  
+
+  /// Pesan peringatan bila rasio H/D tidak standar, atau null bila wajar.
+  String? peringatanRasioHD(double rasio) {
+    if (rasio < RASIO_HD_MIN_PERINGATAN || rasio > RASIO_HD_MAX_PERINGATAN) {
+      return 'Rasio H/D = ${rasio.toStringAsFixed(2)} tidak standar '
+          '(standar ${RASIO_TINGGI_DIAMETER.toStringAsFixed(1)}). '
+          'Kuat tekan belum dikoreksi terhadap rasio H/D.';
+    }
+    return null;
+  }
+
   Map<String, dynamic> validateMutuBeton(String mutu, String standar) {
     List<String> errors = [];
     double? nilai = _parseInputNumber(mutu);
@@ -248,7 +271,8 @@ class UjiKuatService {
     DateTime tanggalPembuatan,
     DateTime tanggalPengujian,
     {double? sisiKubus, double? panjangKubus, double? lebarKubus,
-      double? tinggiKubus, double? diameter, double? beratBendaUji,
+      double? tinggiKubus, double? diameter, double? tinggiSilinder,
+      double? beratBendaUji,
       String? pekerjaan, String? lokasi}
   ) {
     double selisih = kuatTekan28MPa - mutuRencanaMPa;
@@ -287,7 +311,13 @@ class UjiKuatService {
       double t = tinggiKubus ?? sisiKubus;
       hasil.write('Pengujian menggunakan benda uji KUBUS ${p.toStringAsFixed(0)}×${l.toStringAsFixed(0)}×${t.toStringAsFixed(0)} mm. ');
     } else if (diameter != null) {
-      hasil.write('Pengujian menggunakan benda uji SILINDER diameter ${diameter.toStringAsFixed(0)} mm. ');
+      final double tSil = tinggiSilinder ?? diameter * 2;
+      final double rasioHD = tSil / diameter;
+      hasil.write('Pengujian menggunakan benda uji SILINDER diameter ${diameter.toStringAsFixed(0)} mm × tinggi ${tSil.toStringAsFixed(0)} mm (H/D = ${rasioHD.toStringAsFixed(2)}). ');
+      final String? peringatanHD = peringatanRasioHD(rasioHD);
+      if (peringatanHD != null) {
+        hasil.write('$peringatanHD ');
+      }
     }
     
     if (beratBendaUji != null) {
@@ -423,6 +453,7 @@ class UjiKuatService {
         data.tanggalPembuatan,
         data.tanggalPengujian,
         diameter: data.diameter,
+        tinggiSilinder: data.tinggiSilinderEfektif,
         beratBendaUji: data.beratBendaUji,
         pekerjaan: data.pekerjaan,
         lokasi: data.lokasi,
@@ -443,6 +474,7 @@ class UjiKuatService {
         lokasi: data.lokasi,
         photoPaths: data.photoPaths,
         diameter: data.diameter,
+        tinggiSilinder: data.tinggiSilinderEfektif,
         kuatTekanSilinder: kuatTekan28,
         
         kuatTekanEkivalenKgCm2: konversiMPaKeKgCm2EkuivalenKubus(kuatTekan28),

@@ -1237,8 +1237,11 @@ class _ReportsScreenState extends State<ReportsScreen>
                 '${result.diameter!.toStringAsFixed(0)} mm (Ø${(result.diameter! / 10).toStringAsFixed(0)} cm)', 
                 Icons.straighten),
             _buildDetailRow('Tinggi', 
-                '${(result.diameter! * 2).toStringAsFixed(0)} mm (rasio 2:1)', 
+                '${result.tinggiSilinderEfektif!.toStringAsFixed(0)} mm', 
                 Icons.height),
+            _buildDetailRow('Rasio H/D', 
+                '${result.rasioHD!.toStringAsFixed(2)}${(result.rasioHD! < 1.8 || result.rasioHD! > 2.2) ? ' (tidak standar, belum dikoreksi)' : ' (standar 2,0)'}', 
+                Icons.compare_arrows),
             _buildDetailRow('Luas Permukaan', 
                 '${result.luasPermukaan.toStringAsFixed(2)} mm²', 
                 Icons.crop_square),
@@ -1348,11 +1351,11 @@ class _ReportsScreenState extends State<ReportsScreen>
                           '• Kriteria individu: fc ≥ 0.85 × fc\'\n'
                           '• Kriteria rata-rata: fc ≥ 1.15 × fc\'\n'
                           '• Input gaya dalam kN (kilonewton)\n'
-                          '• Diameter standar: 100 mm atau 150 mm'
+                          '• Diameter dan tinggi sesuai benda uji (standar H/D = 2); hasil tidak dikoreksi terhadap H/D'
                         : '• Standar: ASTM C39 (Silinder)\n'
                           '• Concrete is acceptable if fc ≥ specified fc\'\n'
                           '• Input load in kN (kilonewton)\n'
-                          '• Standard diameter: 100 mm or 150 mm',
+                          '• Specimen diameter and height as tested (standard H/D = 2); result not corrected for H/D',
                 style: TextStyle(fontSize: 12, color: Colors.blue[900], height: 1.6),
               ),
             ],

@@ -29,6 +29,7 @@ class UjiKuatResult {
   final double? kuatTekanUmurUjiKgCm2; 
   
   final double? diameter; 
+  final double? tinggiSilinder; 
   final double? kuatTekanSilinder; 
   final double? kuatTekanEkivalenKgCm2; 
   final double? kuatTekanUmurUjiMPa; 
@@ -55,6 +56,7 @@ class UjiKuatResult {
     this.satuanBebanInput,
     this.kuatTekanUmurUjiKgCm2,
     this.diameter,
+    this.tinggiSilinder,
     this.kuatTekanSilinder,
     this.kuatTekanEkivalenKgCm2,
     this.kuatTekanUmurUjiMPa,
@@ -62,6 +64,15 @@ class UjiKuatResult {
 
   
   bool get isPrediksi28Hari => umurBeton != 28;
+
+  /// Tinggi silinder sebenarnya; data lama (tanpa tinggi) dianggap 2 × diameter.
+  double? get tinggiSilinderEfektif =>
+      diameter == null ? null : (tinggiSilinder ?? diameter! * 2);
+
+  /// Rasio tinggi terhadap diameter (H/D). Standar = 2,0.
+  double? get rasioHD => (diameter == null || diameter! <= 0)
+      ? null
+      : tinggiSilinderEfektif! / diameter!;
 
   Map<String, dynamic> toMap() {
     return {
@@ -86,6 +97,7 @@ class UjiKuatResult {
       'satuanBebanInput': satuanBebanInput,
       'kuatTekanUmurUjiKgCm2': kuatTekanUmurUjiKgCm2,
       'diameter': diameter,
+      'tinggiSilinder': tinggiSilinder,
       'kuatTekanSilinder': kuatTekanSilinder,
       'kuatTekanEkivalenKgCm2': kuatTekanEkivalenKgCm2,
       'kuatTekanUmurUjiMPa': kuatTekanUmurUjiMPa,
@@ -117,6 +129,7 @@ class UjiKuatResult {
       satuanBebanInput: map['satuanBebanInput'],
       kuatTekanUmurUjiKgCm2: map['kuatTekanUmurUjiKgCm2']?.toDouble(),
       diameter: map['diameter']?.toDouble(),
+      tinggiSilinder: map['tinggiSilinder']?.toDouble(),
       kuatTekanSilinder: map['kuatTekanSilinder']?.toDouble(),
       kuatTekanEkivalenKgCm2: map['kuatTekanEkivalenKgCm2']?.toDouble(),
       kuatTekanUmurUjiMPa: map['kuatTekanUmurUjiMPa']?.toDouble(),
@@ -148,6 +161,7 @@ class UjiKuatResult {
     String? satuanBebanInput,
     double? kuatTekanUmurUjiKgCm2,
     double? diameter,
+    double? tinggiSilinder,
     double? kuatTekanSilinder,
     double? kuatTekanEkivalenKgCm2,
     double? kuatTekanUmurUjiMPa,
@@ -174,6 +188,7 @@ class UjiKuatResult {
       satuanBebanInput: satuanBebanInput ?? this.satuanBebanInput,
       kuatTekanUmurUjiKgCm2: kuatTekanUmurUjiKgCm2 ?? this.kuatTekanUmurUjiKgCm2,
       diameter: diameter ?? this.diameter,
+      tinggiSilinder: tinggiSilinder ?? this.tinggiSilinder,
       kuatTekanSilinder: kuatTekanSilinder ?? this.kuatTekanSilinder,
       kuatTekanEkivalenKgCm2: kuatTekanEkivalenKgCm2 ?? this.kuatTekanEkivalenKgCm2,
       kuatTekanUmurUjiMPa: kuatTekanUmurUjiMPa ?? this.kuatTekanUmurUjiMPa,
@@ -192,6 +207,7 @@ class UjiKuatData {
   
   
   final double? diameter; 
+  final double? tinggiSilinder; 
   
   
   final double beban; 
@@ -211,6 +227,7 @@ class UjiKuatData {
     this.lebarKubus,
     this.tinggiKubus,
     this.diameter,
+    this.tinggiSilinder,
     required this.beban,
     this.satuanBeban = 'Ton',
     required this.tanggalPembuatan,
@@ -238,6 +255,8 @@ class UjiKuatData {
   double get panjangKubusEfektif => panjangKubus ?? sisiKubus ?? 0;
   double get lebarKubusEfektif => lebarKubus ?? sisiKubus ?? 0;
   double? get tinggiKubusEfektif => tinggiKubus ?? sisiKubus;
+  double? get tinggiSilinderEfektif =>
+      diameter == null ? null : (tinggiSilinder ?? diameter! * 2);
   
  
   int getUmurBeton() {
@@ -252,6 +271,7 @@ class UjiKuatData {
     double? lebarKubus,
     double? tinggiKubus,
     double? diameter,
+    double? tinggiSilinder,
     double? beban,
     String? satuanBeban,
     DateTime? tanggalPembuatan,
@@ -268,6 +288,7 @@ class UjiKuatData {
       lebarKubus: lebarKubus ?? this.lebarKubus,
       tinggiKubus: tinggiKubus ?? this.tinggiKubus,
       diameter: diameter ?? this.diameter,
+      tinggiSilinder: tinggiSilinder ?? this.tinggiSilinder,
       beban: beban ?? this.beban,
       satuanBeban: satuanBeban ?? this.satuanBeban,
       tanggalPembuatan: tanggalPembuatan ?? this.tanggalPembuatan,
