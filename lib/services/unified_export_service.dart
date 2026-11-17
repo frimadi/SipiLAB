@@ -654,6 +654,8 @@ class UnifiedExportService {
             pw.SizedBox(height: 12),
             
             _pdfInfoBox('A. Pengukuran Volume Botol', [
+              _pdfDetailRow('Alat Sand Cone', result.namaAlatText),
+              _pdfDetailRow('Tanggal Kalibrasi', result.tanggalKalibrasiText),
               _pdfDetailRow('Berat Botol + Corong (W1)', 
                   '${result.beratBotolCorong.toStringAsFixed(2)} gram'),
               _pdfDetailRow('Berat Botol + Corong + Air (W2)', 

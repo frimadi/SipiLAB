@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/sand_cone_calibration_templates.dart';
+import '../screens/calibration_manager_screen.dart';
 
 class CalibrationTemplateSelector extends StatefulWidget {
   final Function(CalibrationTemplate) onTemplateSelected;
@@ -18,15 +19,54 @@ class CalibrationTemplateSelector extends StatefulWidget {
 
 class _CalibrationTemplateSelectorState
     extends State<CalibrationTemplateSelector> {
-  late CalibrationTemplate selectedTemplate;
-  final List<CalibrationTemplate> templates =
+  List<CalibrationTemplate> templates =
       CalibrationTemplateService.getDefaultTemplates();
+  late String selectedId;
+
+  CalibrationTemplate get selectedTemplate => templates.firstWhere(
+        (t) => t.id == selectedId,
+        orElse: () => templates.first,
+      );
 
   @override
   void initState() {
     super.initState();
-    selectedTemplate = widget.initialTemplate ??
-        templates.firstWhere((t) => t.id == 'alat_uji_1');
+    selectedId = widget.initialTemplate?.id ?? 'alat_uji_1';
+    _reload();
+  }
+
+  @override
+  void didUpdateWidget(covariant CalibrationTemplateSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final id = widget.initialTemplate?.id;
+    if (id != null && id != selectedId) {
+      selectedId = id;
+    }
+  }
+
+  /// Memuat data kalibrasi terkini (termasuk yang tersimpan di perangkat).
+  /// Bila [notify] true, layar induk diberi tahu agar nilai W ikut diperbarui.
+  Future<void> _reload({bool notify = false}) async {
+    final loaded = await CalibrationTemplateService.loadTemplates();
+    if (!mounted) return;
+    setState(() {
+      templates = loaded;
+    });
+    if (notify) {
+      final t = selectedTemplate;
+      if (t.id != 'custom') {
+        widget.onTemplateSelected(t);
+      }
+    }
+  }
+
+  Future<void> _openManager() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CalibrationManagerScreen()),
+    );
+    if (!mounted) return;
+    await _reload(notify: true);
   }
 
   @override
@@ -62,10 +102,10 @@ class _CalibrationTemplateSelectorState
                     color: Colors.white, size: 20),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
                     Text(
                       'PILIH TEMPLATE KALIBRASI',
                       style: TextStyle(
@@ -86,6 +126,11 @@ class _CalibrationTemplateSelectorState
                   ],
                 ),
               ),
+              IconButton(
+                tooltip: 'Kelola kalibrasi (edit, riwayat, ekspor/impor)',
+                onPressed: _openManager,
+                icon: const Icon(Icons.tune_rounded, color: Color(0xFF7C3AED)),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -105,13 +150,13 @@ class _CalibrationTemplateSelectorState
   }
 
   Widget _buildTemplateCard(CalibrationTemplate template) {
-    final isSelected = selectedTemplate.id == template.id;
+    final isSelected = selectedId == template.id;
     final isCustom = template.id == 'custom';
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedTemplate = template;
+          selectedId = template.id;
         });
         widget.onTemplateSelected(template);
       },
@@ -290,6 +335,11 @@ class _CalibrationTemplateSelectorState
             ],
           ),
           const SizedBox(height: 12),
+          if (selectedTemplate.lastCalibrationDate != null) ...[
+            _buildInfoRow('Tanggal Kalibrasi',
+                _formatDate(selectedTemplate.lastCalibrationDate!)),
+            const SizedBox(height: 6),
+          ],
           _buildInfoRow('Volume Botol (Vb)',
               '${selectedTemplate.volumeBotol.toStringAsFixed(2)} ml'),
           const SizedBox(height: 6),

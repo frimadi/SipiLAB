@@ -74,9 +74,10 @@ class _SandConeScreenState extends State<SandConeScreen> {
     _addListeners();
   }
 
-  void _loadDefaultTemplate() {
-    final template = CalibrationTemplateService.getTemplateById('alat_uji_1');
-    if (template != null) {
+  Future<void> _loadDefaultTemplate() async {
+    final template =
+        await CalibrationTemplateService.getTemplateByIdAsync('alat_uji_1');
+    if (template != null && mounted) {
       _applyTemplate(template);
     }
   }
@@ -1540,6 +1541,9 @@ class _SandConeScreenState extends State<SandConeScreen> {
           ? null 
           : _pekerjaanController.text.trim(),
       tanggalPengujian: DateTime.now(),
+      namaAlat: selectedTemplate?.name,
+      tanggalKalibrasi:
+          isCustomMode ? null : selectedTemplate?.lastCalibrationDate,
     );
   }
 

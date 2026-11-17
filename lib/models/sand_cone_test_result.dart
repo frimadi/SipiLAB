@@ -36,6 +36,10 @@ class SandConeTestResult {
   final String? jenisPekerjaan;
   final DateTime? tanggalPengujian;
 
+  // Identitas alat & tanggal kalibrasi yang dipakai saat pengujian
+  final String? namaAlat;
+  final DateTime? tanggalKalibrasi;
+
  
   
   final List<String> photoPaths;
@@ -77,6 +81,8 @@ class SandConeTestResult {
     this.lokasiProyek,
     this.jenisPekerjaan,
     this.tanggalPengujian,
+    this.namaAlat,
+    this.tanggalKalibrasi,
     
    
     this.photoPaths = const [],
@@ -101,6 +107,20 @@ class SandConeTestResult {
   }
 
   bool get hasDokumentasiFoto => photoPaths.isNotEmpty;
+
+  /// Nama alat sand cone untuk ditampilkan (hasil lama: "Tidak tercatat").
+  String get namaAlatText =>
+      (namaAlat == null || namaAlat!.isEmpty) ? 'Tidak tercatat' : namaAlat!;
+
+  /// Tanggal kalibrasi untuk ditampilkan di laporan.
+  String get tanggalKalibrasiText {
+    if (tanggalKalibrasi != null) {
+      final d = tanggalKalibrasi!;
+      return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    }
+    if (namaAlat == 'Kustom') return 'Input manual';
+    return 'Tidak tercatat';
+  }
   int get jumlahFoto => photoPaths.length;
   
   
@@ -139,6 +159,8 @@ class SandConeTestResult {
     String? lokasiProyek,
     String? jenisPekerjaan,
     DateTime? tanggalPengujian,
+    String? namaAlat,
+    DateTime? tanggalKalibrasi,
     List<String>? photoPaths,
   }) {
     return SandConeTestResult(
@@ -169,6 +191,8 @@ class SandConeTestResult {
       lokasiProyek: lokasiProyek ?? this.lokasiProyek,
       jenisPekerjaan: jenisPekerjaan ?? this.jenisPekerjaan,
       tanggalPengujian: tanggalPengujian ?? this.tanggalPengujian,
+      namaAlat: namaAlat ?? this.namaAlat,
+      tanggalKalibrasi: tanggalKalibrasi ?? this.tanggalKalibrasi,
       photoPaths: photoPaths ?? this.photoPaths,
     );
   }
@@ -203,6 +227,8 @@ class SandConeTestResult {
       'lokasiProyek': lokasiProyek,
       'jenisPekerjaan': jenisPekerjaan,
       'tanggalPengujian': tanggalPengujian?.toIso8601String(),
+      'namaAlat': namaAlat,
+      'tanggalKalibrasi': tanggalKalibrasi?.toIso8601String(),
       'photoPaths': photoPaths,
     };
   }
@@ -238,6 +264,10 @@ class SandConeTestResult {
         jenisPekerjaan: json['jenisPekerjaan'] as String?,
         tanggalPengujian: json['tanggalPengujian'] != null 
             ? DateTime.parse(json['tanggalPengujian']) 
+            : null,
+        namaAlat: json['namaAlat'] as String?,
+        tanggalKalibrasi: json['tanggalKalibrasi'] != null
+            ? DateTime.tryParse(json['tanggalKalibrasi'].toString())
             : null,
         photoPaths: json['photoPaths'] != null 
             ? List<String>.from(json['photoPaths']) 

@@ -69,6 +69,13 @@ class SandConeExportService {
   
     _setCellValue(sheetObject, 'A${++row}', 'I. KALIBRASI ALAT SAND CONE', titleStyle);
     row++;
+
+    _setCellValue(sheetObject, 'A${++row}', 'ALAT SAND CONE:', headerStyle);
+    _setCellValue(sheetObject, 'B$row', result.namaAlatText);
+
+    _setCellValue(sheetObject, 'A${++row}', 'TANGGAL KALIBRASI:', headerStyle);
+    _setCellValue(sheetObject, 'B$row', result.tanggalKalibrasiText);
+    row++;
     
     _setCellValue(sheetObject, 'A${++row}', 'URAIAN', headerStyle);
     _setCellValue(sheetObject, 'B$row', 'RUMUS', headerStyle);
@@ -274,6 +281,8 @@ class SandConeExportService {
             pw.SizedBox(height: 10),
             _buildPdfTable([
               ['URAIAN', 'RUMUS', 'NILAI'],
+              ['Alat Sand Cone', '', result.namaAlatText],
+              ['Tanggal Kalibrasi', '', result.tanggalKalibrasiText],
               ['Berat Botol + Corong', 'W1', '${result.beratBotolCorong}'],
               ['Berat Botol Penuh Air + Corong', 'W2', '${result.beratBotolCorongAir}'],
               ['Volume Botol (Vb)', 'Vb = W2-W1', '${result.volumeBotolCorong.toStringAsFixed(2)}'],

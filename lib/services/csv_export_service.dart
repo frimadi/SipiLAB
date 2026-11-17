@@ -24,6 +24,9 @@ class CsvExportService {
     
     csv.writeln('I. KALIBRASI PASIR LABORATORIUM');
     csv.writeln('');
+    csv.writeln('Alat Sand Cone,${result.namaAlatText}');
+    csv.writeln('Tanggal Kalibrasi,${result.tanggalKalibrasiText}');
+    csv.writeln('');
     csv.writeln('BERAT ISI PASIR DENGAN BOTOL ALAT');
     csv.writeln('Uraian,Rumus,Nilai (gram)');
     csv.writeln('Berat Botol + Corong,W1,${result.beratBotolCorong}');

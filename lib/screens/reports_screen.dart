@@ -671,6 +671,9 @@ class _ReportsScreenState extends State<ReportsScreen>
         
         _buildSectionTitle('🔬 SECTION I: KALIBRASI ALAT'),
         _buildDetailCard([
+          _buildDetailRow('Alat Sand Cone', result.namaAlatText, Icons.science),
+          _buildDetailRow('Tanggal Kalibrasi', result.tanggalKalibrasiText,
+              Icons.event),
           _buildDetailRow('Berat Botol + Corong (W1)', 
               '${result.beratBotolCorong.toStringAsFixed(2)} gram', 
               Icons.view_in_ar),
